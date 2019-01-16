@@ -44,6 +44,9 @@ class Bot:
         # Moves of different suits
         moves_diff_suit = []
 
+        # Current player
+        me = state.whose_turn()
+
         # Get all trump suit moves available
         for index, move in enumerate(moves):
 
@@ -56,12 +59,8 @@ class Bot:
         else:
             iStart = False
 
-        # Use your jack to exchange the trump on the table and/or show any marriage in your hand at the earliest possible opportunity
-
-
-
         # Opponent is on lead
-        if iStart is False:
+        if Deck.get_trick(self) is not None:
 
             # Stock is open
             if state.get_stock_size(self) != 0:
@@ -109,9 +108,32 @@ class Bot:
                     return moves_diff_suit[len(moves_diff_suit)-1]
         # You are on lead -- TO_DO
         else:
-            return curr_hand[0]
+            # DON'T LEAD WITH A TRUMP!
+            # IF ITS THE FIRST TURN, PLAY A ACE OR 10 OF NON-TRUMP!
 
+            # Use your jack to exchange the trump on the table
+            if Deck.can_exchange(self, me) is True:
+                # Find the trump jack in the hand
+                jack_index = Deck.get_trump_jack_index(self)
+                Deck.exchange_trump(self, jack_index)
 
+            # Show any marriage in your hand (May never be true, make a vocal saying it happens)
+            possible_mariages = Deck.get_possible_mariages(self, me)
+            if len(possible_mariages == 2):
+                print("My wife\n")
+                return possible_mariages[0]
+            elif len(possible_mariages > 2):
+                print("My wife\n")
+                return possible_mariages[0]
+
+            # If it is the first turn, play ace or 10 of non-trump if possible
+            if Deck.get_stock_size(self) == 10:
+                for i in range(0,5):
+                    if moves[i] == 0 or 5 or 10 or 2 or 6 or 11 or 16 and Deck.get_suit(moves[i]) != state.get_trump_suit(self):
+                        return moves[i]
+
+            # Change this!
+            return moves[0]
 
 
         """
