@@ -6,6 +6,7 @@ uniformly at random.
 # Import the API objects
 from api import State
 from api import Deck
+from api import util
 import random
 
 
@@ -30,10 +31,13 @@ class Bot:
 
         # All legal moves
         moves = state.moves()
+        moves_str = state.moves()
+        for index, move in enumerate(moves_str):
+            moves_str[index] = util.get_card_name(moves_str[index][0])
+        print(moves_str)
 
         # Current hand
-        curr_hand = state.hand(self)
-        curr_hand.sort()
+        curr_hand = state.hand()
 
         # Moves of the same suit
         moves_same_suit = []
@@ -53,23 +57,23 @@ class Bot:
             if move[0] is not None and Deck.get_suit(move[0]) == state.get_trump_suit():
                 moves_trump_suit.append(move)
 
-        # Determine who is on lead at the start of the game
-        if state.whose_turn(self) == 0:
-            iStart = True
-        else:
-            iStart = False
+        # Show any marriage in your hand
+        possible_mariages = moves.Deck.get_possible_mariages(me)
+        if possible_mariages is not None and state.get_opponents_played_card() is not None:
+            return possible_mariages[0]
+
 
         # Opponent is on lead
-        if Deck.get_trick(self) is not None:
+        if state.get_opponents_played_card() is not None:
 
             # Stock is open
-            if state.get_stock_size(self) != 0:
+            if state.get_stock_size() != 0:
 
                 # If possible win a non trump trick by following suit without breaking up a marriage
-                opponent_played = state.get_opponents_played_card(self)
+                opponent_played = state.get_opponents_played_card()
                 opponent_played_suit = Deck.get_suit(opponent_played)
 
-                if opponent_played_suit != Deck.get_trump_suit(self):
+                if opponent_played_suit != state.get_trump_suit():
                     # enumerate though list for all moves of same suit as opponents move
                     # (taken from bully.py)
                     for index, move in enumerate(moves):
@@ -77,17 +81,18 @@ class Bot:
                                 state.get_opponents_played_card()):
                             moves_same_suit.append(move)
 
-                    # Sort the indices for ease
+                    # Sort the indices for ease (may not be necessary)
                     moves_same_suit.sort()
 
                     # If you can win the hand, win it with the highest card possible
-                    if moves_same_suit[0] > state.get_opponents_played_card(self):
+                    if moves_same_suit[0] > state.get_opponents_played_card() and len(moves_same_suit) is not None:
                         return moves_same_suit[0]
 
                     # If you cannot win the hand by matching suit, trump with your lowest if opponent leads with ace/10
                     # elif statement can be simplified by using modulo!
-                    elif state.get_opponents_played_card(self) == 0 or 5 or 10 or 15 or 2 or 6 or 11 or 16:
+                    elif state.get_opponents_played_card() == 0 or 5 or 10 or 15 or 2 or 6 or 11 or 16:
                         return moves_trump_suit[len(moves_trump_suit) -1]
+
                 # Opponent played trump suit
                 else:
                     # Get possible moves, not including trump cards
@@ -112,24 +117,15 @@ class Bot:
             # IF ITS THE FIRST TURN, PLAY A ACE OR 10 OF NON-TRUMP!
 
             # Use your jack to exchange the trump on the table
-            if Deck.can_exchange(self, me) is True:
+            if curr_hand.deck.can_exchange(me) is True:
                 # Find the trump jack in the hand
-                jack_index = Deck.get_trump_jack_index(self)
-                Deck.exchange_trump(self, jack_index)
-
-            # Show any marriage in your hand (May never be true, make a vocal saying it happens)
-            possible_mariages = Deck.get_possible_mariages(self, me)
-            if len(possible_mariages == 2):
-                print("My wife\n")
-                return possible_mariages[0]
-            elif len(possible_mariages > 2):
-                print("My wife\n")
-                return possible_mariages[0]
+                jack_index = curr_hand.deck.get_trump_jack_index()
+                curr_hand.deck.exchange_trump(jack_index)
 
             # If it is the first turn, play ace or 10 of non-trump if possible
-            if Deck.get_stock_size(self) == 10:
+            if state.get_stock_size() == 10:
                 for i in range(0,5):
-                    if moves[i] == 0 or 5 or 10 or 2 or 6 or 11 or 16 and Deck.get_suit(moves[i]) != state.get_trump_suit(self):
+                    if moves[i] == 0 or 5 or 10 or 2 or 6 or 11 or 16 and Deck.get_suit(moves[i]) != curr_hand.get_trump_suit():
                         return moves[i]
 
             # Change this!
