@@ -32,9 +32,9 @@ class Bot:
         # All legal moves
         moves = state.moves()
         moves_str = state.moves()
-        for index, move in enumerate(moves_str):
+        """for index, move in enumerate(moves_str):
             moves_str[index] = util.get_card_name(moves_str[index][0])
-        print(moves_str)
+        print(moves_str)"""
 
         # Current hand
         curr_hand = state.hand()
@@ -50,6 +50,10 @@ class Bot:
 
         # Current player
         me = state.whose_turn()
+        #me.Deck.get_player_hand()
+
+        # State
+        st = state.clone()
 
         # Get all trump suit moves available
         for index, move in enumerate(moves):
@@ -58,9 +62,9 @@ class Bot:
                 moves_trump_suit.append(move)
 
         # Show any marriage in your hand
-        possible_mariages = moves.Deck.get_possible_mariages(me)
+        """possible_mariages = st.get_possible_mariages(me)
         if possible_mariages is not None and state.get_opponents_played_card() is not None:
-            return possible_mariages[0]
+            return possible_mariages[0]"""
 
 
         # Opponent is on lead
@@ -72,6 +76,10 @@ class Bot:
                 # If possible win a non trump trick by following suit without breaking up a marriage
                 opponent_played = state.get_opponents_played_card()
                 opponent_played_suit = Deck.get_suit(opponent_played)
+
+                # If opponent played Ace or 10, Trump it with the lowest card
+                if opponent_played %5 == 0 or 2 or 6 or 11 or 16 and moves_trump_suit is not None:
+                    return moves_trump_suit[len(moves_trump_suit) -1]
 
                 if opponent_played_suit != state.get_trump_suit():
                     # enumerate though list for all moves of same suit as opponents move
@@ -91,7 +99,7 @@ class Bot:
                     # If you cannot win the hand by matching suit, trump with your lowest if opponent leads with ace/10
                     # elif statement can be simplified by using modulo!
                     elif state.get_opponents_played_card() == 0 or 5 or 10 or 15 or 2 or 6 or 11 or 16:
-                        return moves_trump_suit[len(moves_trump_suit) -1]
+                        return moves_trump_suit[0]
 
                 # Opponent played trump suit
                 else:
@@ -112,12 +120,13 @@ class Bot:
                     # for now just discard your lowest card of another suit
                     return moves_diff_suit[len(moves_diff_suit)-1]
         # You are on lead -- TO_DO
+
         else:
             # DON'T LEAD WITH A TRUMP!
             # IF ITS THE FIRST TURN, PLAY A ACE OR 10 OF NON-TRUMP!
 
             # Use your jack to exchange the trump on the table
-            if curr_hand.deck.can_exchange(me) is True:
+            if self.deck.can_exchange(me) is True:
                 # Find the trump jack in the hand
                 jack_index = curr_hand.deck.get_trump_jack_index()
                 curr_hand.deck.exchange_trump(jack_index)
@@ -130,7 +139,6 @@ class Bot:
 
             # Change this!
             return moves[0]
-
 
         """
         When the opponent is on lead and the stock is open: - BASICALLY DONE
